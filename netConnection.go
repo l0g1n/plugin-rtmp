@@ -210,6 +210,7 @@ func (conn *NetConnection) readChunkType(h *ChunkHeader, chunkType byte) (err er
 	if chunkType == 3 {
 		// 3个字节的时间戳
 	} else {
+		h.Timestamp = 0
 		// Timestamp 3 bytes
 		if _, err = conn.ReadFull(b3); err != nil {
 			return err
@@ -236,7 +237,7 @@ func (conn *NetConnection) readChunkType(h *ChunkHeader, chunkType byte) (err er
 	}
 
 	// ExtendTimestamp 4 bytes
-	if h.Timestamp == 0xffffff { // 对于type 0的chunk,绝对时间戳在这里表示,如果时间戳值大于等于0xffffff(16777215),该值必须是0xffffff,且时间戳扩展字段必须发送,其他情况没有要求
+	if h.Timestamp >= 0xffffff { // 对于type 0的chunk,绝对时间戳在这里表示,如果时间戳值大于等于0xffffff(16777215),该值必须是0xffffff,且时间戳扩展字段必须发送,其他情况没有要求
 		if _, err = conn.ReadFull(b4); err != nil {
 			return err
 		}
@@ -244,7 +245,6 @@ func (conn *NetConnection) readChunkType(h *ChunkHeader, chunkType byte) (err er
 	}
 	if chunkType == 0 {
 		h.ExtendTimestamp = h.Timestamp
-		h.Timestamp = 0
 	}
 	return nil
 }
