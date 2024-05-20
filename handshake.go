@@ -115,7 +115,7 @@ func (nc *NetConnection) simple_handshake(C1 []byte) error {
 	copy(S0S1[5:], "Monibuca")
 	nc.Write(S0S1)
 	nc.Write(C1) // S2
-	if C2 := ReadBuf(nc.Reader, C1S1_SIZE); bytes.Compare(C2[8:], S0S1[9:]) != 0 {
+	if C2 := ReadBuf(nc.Reader, C1S1_SIZE); conf.C2 && bytes.Compare(C2[8:], S0S1[9:]) != 0 {
 		return errors.New("C2 Error")
 	}
 	return nil
