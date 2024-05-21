@@ -20,6 +20,7 @@ type RTMPConfig struct {
 	config.Push
 	ChunkSize int  `default:"65535" desc:"分片大小"`
 	KeepAlive bool `desc:"保持连接，流断开不关闭连接"` //保持rtmp连接，默认随着stream的close而主动断开
+	C2        bool `desc:"握手是否检查C2"`
 }
 
 func pull(streamPath, url string) {

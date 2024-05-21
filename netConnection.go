@@ -160,7 +160,6 @@ func (conn *NetConnection) readChunk() (msg *Chunk, err error) {
 		return nil, err
 	}
 	if chunk.AVData.Push(mem); chunk.AVData.ByteLength == msgLen {
-		chunk.ChunkHeader.ExtendTimestamp += chunk.ChunkHeader.Timestamp
 		msg = chunk
 		switch chunk.MessageTypeID {
 		case RTMP_MSG_AUDIO, RTMP_MSG_VIDEO:
@@ -236,16 +235,26 @@ func (conn *NetConnection) readChunkType(h *ChunkHeader, chunkType byte) (err er
 			}
 		}
 	}
-
+	
 	// ExtendTimestamp 4 bytes
 	if h.Timestamp >= 0xffffff { // 对于type 0的chunk,绝对时间戳在这里表示,如果时间戳值大于等于0xffffff(16777215),该值必须是0xffffff,且时间戳扩展字段必须发送,其他情况没有要求
 		if _, err = conn.ReadFull(b4); err != nil {
 			return err
 		}
 		util.GetBE(b4, &h.Timestamp)
-	}
-	if chunkType == 0 {
-		h.ExtendTimestamp = h.Timestamp
+		switch chunkType {
+		case 0:
+			h.ExtendTimestamp = h.Timestamp
+		case 1, 2:
+			h.ExtendTimestamp += (h.Timestamp -0xffffff)
+		}
+	} else {
+		switch chunkType {
+		case 0:
+			h.ExtendTimestamp = h.Timestamp
+		case 1, 2:
+			h.ExtendTimestamp += h.Timestamp
+		}
 	}
 	return nil
 }
